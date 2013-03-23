@@ -31,7 +31,7 @@ cd ~/CouchPotatoServer # or wherever you have it stored
 cd ./couchpotato/core/providers/torrent
 
 # Extract the downloaded master.zip into a folder named deildu
-unzip master.zip -d . # note, your master.zip might be located somewhere else
+unzip master.zip -d corsaronero # note, your master.zip might be located somewhere else
 
 # Startup CouchPotatoServer
 cd ~/CouchPotatoServer # or wherever you have it stored
