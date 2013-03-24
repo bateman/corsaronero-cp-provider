@@ -14,6 +14,7 @@ your Couch Potato torrent providers folder.
 # Download the ilCorsaroNero.info search provider (Italian torrents only, see http://ilcorsaronero.info)
 https://github.com/bateman/corsaronero-cp-provider/archive/master.zip
 
+# NOTE: This step was necessary on my Win8 installation, whereas it was not needed on my Synology NAS.
 # Download the latest release of BeautifulSoup4 (http://www.crummy.com/software/BeautifulSoup/bs4/download/4.1/)
 # The latest is 4.1.2, as of this writing. Due to a bug that prevents from scraping the torrent page, you will 
 # have to replace the bs4 subfolder included in CouchPotatoServer 
