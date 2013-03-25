@@ -25,7 +25,7 @@ rm -r bs4
 mv __WHEREVER__/bs4 .
 
 # Shut down CouchPotatoServer, either by opening it up in a browser 
-# and going to "settings" -> "shutdown", or by terminating the process
+# and going to "Settings" -> "Shutdown", or by terminating the process
 
 # Open your CouchPotatoServer folder and traverse into the torrent providers folder
 cd ~/CouchPotatoServer # or wherever you have it stored
@@ -38,8 +38,18 @@ unzip master.zip -d corsaronero # note, your master.zip might be located somewhe
 cd ~/CouchPotatoServer # or wherever you have it stored
 python CouchPotato.py
 
-# Now you should see *Corsanero* as one of the prodivers for Torrents.
+# Now you should see *CorsaNero* as one of the prodivers for Torrents. Note that this 
+# providers works only if you put *ita, italian, sub ita* etc. as preferred keywords
+# in "Setting" -> "Searcher" -> "Preferred Words". This will give Italian releases
+# a higher score.
 ```
+
+####LIMITATIONS & OTHER ISSUES
+
+This provider won't affect the fact that CouchPotatoServer will look up the movie tite using the
+English title, as retrieved from IMDb. As such, this provider will only snatch torrent when:
+* the releaser added also the English title other than the Italian one.
+* the Italian and English title of the movie are the same.
 
 ####SHOUT OUT
 
