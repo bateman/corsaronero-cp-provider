@@ -11,7 +11,7 @@ config = [{
             'subtab': 'providers',
             'list': 'torrent_providers',
             'name': 'CorsaroNero',
-            'description': 'See <a href="http://ilcorsaronero.info">ilCorsaroNero</a>',
+            'description': 'See <a href="http://ilcorsaronero.info">CorsaroNero</a>',
             'wizard': True,
             'options': [
                 {
