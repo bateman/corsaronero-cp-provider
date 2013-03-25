@@ -1,8 +1,9 @@
 from bs4 import BeautifulSoup
+from couchpotato.core.helpers.encoding import simplifyString, tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.torrent.base import TorrentMagnetProvider
-import re
+import datetime
 import traceback
 
 log = CPLog(__name__)
@@ -11,90 +12,108 @@ log = CPLog(__name__)
 class CorsaroNero(TorrentMagnetProvider):
 
 	urls = {
-		'test': 'http://ilcorsaronero.info/',
-		'base_url': 'http://ilcorsaronero.info/',
+		'test': 'http://ilcorsaronero.info',
+		'base_url': 'http://ilcorsaronero.info',
 		'detail': 'http://ilcorsaronero.info/tor/%d/%s',
-		'search': 'http://ilcorsaronero.info/argh.php?search=%s %s',
+		'search': 'http://ilcorsaronero.info/torrent-ita/%d/%s.html',
 	}
 
+	### TODO: are animated movies released to DVDrip or Anime category? ###
 	cat_ids = [
-		([1], ['DVDrip']),
-		([5], ['Anime']),
+		(1, 'DVDrip'),
+		#(5, 'Anime'),
 	]
 
-	http_time_between_calls = 1 #seconds
+	http_time_between_calls = 1  # seconds
 	cat_backup_id = None
 
+	### TODO: what about movie year and quality? ###
 	def _searchOnTitle(self, title, movie, quality, results):
-		data = self.getHTMLData(self.urls['search'] % (title, quality))
-		#data = self.getHTMLData(self.urls['search'] % ('m', movie['library']['identifier'].replace('tt', '')))
-
+		# remove accents 
+		simpletitle = simplifyString(title)
+		data = self.getHTMLData(self.urls['search'] % (1, tryUrlencode(simpletitle)))
+		
+		if 'Nessus torrent trovato!!!!' in data:
+			log.info("No torrents found for %s on ilCorsaroNero.info.", title)
+			return
+		
 		if data:
-			#cat_ids = self.getCatId(quality['identifier'])
-			table_order = ['&nbsp;Name<br>', 'Size<br>', 'Azione<br>', 'Data&nbsp;&#8595<br>', 'S<br>', 'L<br>']
+			table_order = ['Cat', 'Name', 'Size', 'Azione', 'Data', 'S', 'L']
 
 			try:
 				html = BeautifulSoup(data)
-				resultdiv = html.find('tr', attrs = {'class':'odd'})
-				for result in resultdiv.find_all('td', recursive = True):
-					print result.get('id').lower()
-					## td class lista
-					if result.get('id').lower() not in cat_ids:
-						continue
-
+				resultdiv = html.find('div', attrs={'id': 'left'})
+				resulttable = resultdiv.find('tbody')
+				entries = resulttable.find_all('tr')		
+				
+				for result in entries:
 					try:
-						for temp in result.find_all('tr'):
-							if temp['class'] is 'firstr' or not temp.get('id'):
-								continue
 
-							new = {}
+						if not result.get('class') or result['class'][0] == 'bordo':
+							continue
+						
+						new = {}
 
-							nr = 0
-							for td in temp.find_all('td'):
-								column_name = table_order[nr]
-								if column_name:
+						nr = 0
+						for td in result.find_all('td'):
+							column_name = table_order[nr]
+							if column_name:
+								
+								if column_name is 'Cat':
+									cat = td.find('a', {'class': 'red'}).text
+									# category must be in cat_ids to go on, otherwise break inner cicle and move to next result
+									if cat == self.cat_ids[0][1]: #or cat == self.cat_ids[1][1]:
+										log.info("Hit right category: %s is a movie, keep going.", (cat))
+										td.next
+									else:
+										log.info("Wrong category: %s not a movie, skipping.", (cat))
+										break										
+								elif column_name is 'Name':
+									link = td.find('a', {'class': 'tab'})										
+									new['name'] = link.text									
+								elif column_name is 'Size':
+									new['size'] = self.parseSize(td.text)
+								elif column_name is 'Azione':
+									# retrieve download link
+									new['detail_url'] = td.find('form')['action']
+									new['id'] = new['detail_url'].split('/')[4]
+									# fare richiesta detail url e prendere link magnet
+									new['url'] = self.getMagnetLink(new['detail_url'])
+								elif column_name is 'Data':
+									new['age'] = self.ageToDays(td.find('font').text)
+								elif column_name is 'S':
+									new['seeders'] = tryInt(td.find('font').text)
+								elif column_name is 'L':
+									new['leechers'] = tryInt(td.find('font').text)
+									### TODO: what about score extras here ??? ###
+									new['score'] = 0
 
-									if column_name is 'name':
-										link = td.find('div', {'class': 'torrentname'}).find_all('a')[1]
-										new['id'] = temp.get('id')[-8:]
-										new['name'] = link.text
-										new['url'] = td.find('a', 'imagnet')['href']
-										new['detail_url'] = self.urls['detail'] % link['href'][1:]
-										new['score'] = 20 if td.find('a', 'iverif') else 0
-									elif column_name is 'size':
-										new['size'] = self.parseSize(td.text)
-									elif column_name is 'age':
-										new['age'] = self.ageToDays(td.text)
-									elif column_name is 'seeds':
-										new['seeders'] = tryInt(td.text)
-									elif column_name is 'leechers':
-										new['leechers'] = tryInt(td.text)
+							nr += 1
 
-								nr += 1
-
+						if nr == 7: # only if we parsed all tds (i.e. category was right)
 							results.append(new)
 					except:
-						log.error('Failed parsing KickAssTorrents: %s', traceback.format_exc())
-
+						log.error('Failed parsing ilCorsaroNero: %s', traceback.format_exc())
+				pass
+			
 			except AttributeError:
 				log.debug('No search results found.')
 
+	# computes days since the torrent release
 	def ageToDays(self, age_str):
-		age = 0
-		age_str = age_str.replace('&nbsp;', ' ')
+		dd_mm_yy = age_str.split('.')
+		yyyy = int("20" + dd_mm_yy[2])		
+		t1 = datetime.datetime(yyyy, int(dd_mm_yy[1]), int(dd_mm_yy[0]))
+		t2 = datetime.datetime.now()
+		# actually a datetime.timedelta object
+		tdelta = t2 - t1
+		# to int
+		return tdelta.days
 
-		regex = '(\d*.?\d+).(sec|hour|day|week|month|year)+'
-		matches = re.findall(regex, age_str)
-		for match in matches:
-			nr, size = match
-			mult = 1
-			if size == 'week':
-				mult = 7
-			elif size == 'month':
-				mult = 30.5
-			elif size == 'year':
-				mult = 365
-
-			age += tryInt(nr) * mult
-
-		return tryInt(age)
+	# retrieves the magnet link from the detail page of the original torrent result
+	def getMagnetLink(self, url):
+		data = self.getHTMLData(url)
+		html = BeautifulSoup(data)
+		magnet = html.find('a', attrs={'class': 'forbtn'})['href']
+		return magnet
+	
