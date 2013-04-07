@@ -29,7 +29,7 @@ class CorsaroNero(TorrentMagnetProvider):
 
 	### TODO: what about movie year and quality? ###
 	def _searchOnTitle(self, title, movie, quality, results):
-		log.debug("Searching for %s (%s) on %s" % (title, quality, self.urls['base_url']))
+		log.debug("Searching for %s (%s) on %s" % (title, quality['label'], self.urls['base_url']))
 		# remove accents 
 		simpletitle = simplifyString(title)
 		data = self.getHTMLData(self.urls['search'] % (1, tryUrlencode(simpletitle)))
