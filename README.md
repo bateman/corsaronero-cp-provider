@@ -46,13 +46,6 @@ python CouchPotato.py
 # a higher score.
 ```
 
-####LIMITATIONS & OTHER ISSUES
-
-This provider won't affect the fact that CouchPotatoServer will look up the movie tite using the
-English title, as retrieved from IMDb. As such, this provider will only snatch torrent when:
-* the releaser added also the English title other than the Italian one.
-* the Italian and English title of the movie are the same.
-
 ####SHOUT OUT
 
 Thanks to RuudBurger (https://github.com/RuudBurger) for developing CouchPotato, 

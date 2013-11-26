@@ -29,13 +29,34 @@ class CorsaroNero(TorrentMagnetProvider):
 
 	### TODO: what about movie year and quality? ###
 	def _searchOnTitle(self, title, movie, quality, results):
-		log.debug("Searching for %s (%s) on %s" % (title, quality['label'], self.urls['base_url']))
+		log.debug("Searching for %s (imdb: %s) (%s) on %s" % (title, movie['library']['identifier'].replace('tt', ''), quality['label'], self.urls['base_url']))
+
+		# Get italian title
+		# First, check cache
+		cache_key = 'italiantitle.%s' % movie['library']['identifier']
+		italiantitle = self.getCache(cache_key)
+
+		if not italiantitle:
+			try:
+				dataimdb = self.getHTMLData('http://www.imdb.com/title/%s/releaseinfo' % (movie['library']['identifier']))
+				html = BeautifulSoup(dataimdb)
+				titletable = html.find("table", id='akas')
+				for row in titletable.findAll('tr'):
+					if row.findAll('td')[0].text == 'Italy' : italiantitle = row.findAll('td')[1].text
+			except:
+				log.error('Failed parsing iMDB for italian title, using the original one: %s', traceback.format_exc())
+				italiantitle = title
+
+			self.setCache(cache_key,italiantitle,timeout = 25920000)
+				
+		log.debug("Title after searching for the italian one: %s" % italiantitle)
+
 		# remove accents 
-		simpletitle = simplifyString(title)
+		simpletitle = simplifyString(italiantitle)
 		data = self.getHTMLData(self.urls['search'] % (1, tryUrlencode(simpletitle)))
 
 		if 'Nessus torrent trovato!!!!' in data:
-			log.info("No torrents found for %s on ilCorsaroNero.info.", title)
+			log.info("No torrents found for %s on ilCorsaroNero.info.", italiantitle)
 			return
 		
 		if data:
