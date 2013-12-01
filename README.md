@@ -14,6 +14,8 @@ your Couch Potato torrent providers folder.
 # Download the ilCorsaroNero.info search provider (Italian torrents only, see http://ilcorsaronero.info)
 https://github.com/bateman/corsaronero-cp-provider/archive/master.zip
 
+# If you're using the latest GIT version of CouchPotato or any version AFTER 2.3.1 you DON'T need the following NOTE, otherwise you do.
+
 # NOTE: This step is necessary to avoid getting html parse errors on function getHTMLdata(). It appears to be
 # a but in the version of BeautifulSoup4 lib included with current CPS code base.
 #
