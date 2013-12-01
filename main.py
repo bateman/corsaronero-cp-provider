@@ -43,6 +43,10 @@ class CorsaroNero(TorrentMagnetProvider):
 				titletable = html.find("table", id='akas')
 				for row in titletable.findAll('tr'):
 					if row.findAll('td')[0].text == 'Italy' : italiantitle = row.findAll('td')[1].text
+				# if we didnt find any italian title, the movie has probably never been released in italy, but we'll try searching for the original title anyways 
+				if not italiantitle:
+					log.debug('Failed to find italian title for %s, it has probably never been released in Italy, we\'ll try searching for the original title anyways', title)
+					italiantitle = title
 			except:
 				log.error('Failed parsing iMDB for italian title, using the original one: %s', traceback.format_exc())
 				italiantitle = title
@@ -62,9 +66,9 @@ class CorsaroNero(TorrentMagnetProvider):
 		if data:
 			try:
 				html = BeautifulSoup(data)
-				resultdiv = html.find('div', attrs={'id': 'left'})
-				entries_1 = resultdiv.find_all('tr', attrs={'class':'odd'})
-				entries_2 = resultdiv.find_all('tr', attrs={'class':'odd2'})
+				#resultdiv = html.find('div', attrs={'id': 'left'})
+				entries_1 = html.findAll('tr', attrs={'class':'odd'})
+				entries_2 = html.findAll('tr', attrs={'class':'odd2'})
 			
 				try:
 					self.parseResults(results, entries_1)
@@ -115,8 +119,9 @@ class CorsaroNero(TorrentMagnetProvider):
 							log.info("Wrong category: %s not a movie, skipping.", (cat))
 							break										
 					elif column_name is 'Name':
-						link = td.find('a', {'class': 'tab'})										
-						new['name'] = link.text									
+						link = td.find('a', {'class': 'tab'})
+						# extract the title from the real link instead of the text because the text is often cut and doesn't contain the full release name
+						new['name'] = link['href'].split('/')[5]									
 					elif column_name is 'Size':
 						new['size'] = self.parseSize(td.text)
 					elif column_name is 'Azione':
