@@ -33,7 +33,7 @@ mv __WHEREVER__/bs4 .
 
 # Open your CouchPotatoServer folder and traverse into the torrent providers folder
 cd ~/CouchPotatoServer # or wherever you have it stored
-cd ./couchpotato/core/providers/torrent
+cd ./couchpotato/core/media/movie/providers/torrent
 
 # Extract the downloaded master.zip into a folder named deildu
 unzip master.zip -d corsaronero # note, your master.zip might be located somewhere else
