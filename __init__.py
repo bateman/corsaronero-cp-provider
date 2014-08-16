@@ -1,6 +1,6 @@
 from .main import CorsaroNero
 
-def start():
+def autoload():
     return CorsaroNero()
 
 config = [{
