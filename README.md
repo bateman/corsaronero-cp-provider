@@ -5,8 +5,9 @@ A CouchPotatoServer (v2) module to add ilCorsaronero.info as a torrent provider 
 
 ####SETUP INSTRUCTIONS (TLDR)
 
-Download the master branch *https://github.com/bateman/corsaronero-cp-provider/archive/master.zip* and copy it into
-your Couch Potato torrent providers folder.
+Download the master branch *https://github.com/bateman/corsaronero-cp-provider/archive/master.zip* and copy the init.py and main.py file
+inside "corsaronero" folder into your CouchPotato custom plugin folder (it's under CouchPotato data dir folder).
+If you don't know where your CouchPotato data dir folder is, open CouchPotato web interface, then go to: Settings -> About -> Directories
 
 ####SETUP INSTRUCTIONS
 
@@ -14,28 +15,14 @@ your Couch Potato torrent providers folder.
 # Download the ilCorsaroNero.info search provider (Italian torrents only, see http://ilcorsaronero.info)
 https://github.com/bateman/corsaronero-cp-provider/archive/master.zip
 
-# If you're using the latest GIT version of CouchPotato or any version AFTER 2.3.1 you DON'T need the following NOTE, otherwise you do.
-
-# NOTE: This step is necessary to avoid getting html parse errors on function getHTMLdata(). It appears to be
-# a but in the version of BeautifulSoup4 lib included with current CPS code base.
-#
-# Download the latest release of BeautifulSoup4 (http://www.crummy.com/software/BeautifulSoup/bs4/download/4.1/)
-# The latest is 4.1.2, as of this writing. Due to a bug that prevents from scraping the torrent page, you will 
-# have to replace the bs4 subfolder included in CouchPotatoServer 
-tar -zxvf beautifulsoup4-4.1.2.tar.gz  # current folder is __WHEREVER__
-cd ~/CouchPotatoServer # or wherever you have it stored
-cd ./couchpotato/libs
-rm -r bs4
-mv __WHEREVER__/bs4 .
-
 # Shut down CouchPotatoServer, either by opening it up in a browser 
 # and going to "Settings" -> "Shutdown", or by terminating the process
 
 # Open your CouchPotatoServer folder and traverse into the torrent providers folder
 cd ~/CouchPotatoServer # or wherever you have it stored
-cd ./couchpotato/core/providers/torrent
+cd ./custom_plugins
 
-# Extract the downloaded master.zip into a folder named deildu
+# Extract the downloaded master.zip into a folder named corsaronero
 unzip master.zip -d corsaronero # note, your master.zip might be located somewhere else
 
 # Startup CouchPotatoServer

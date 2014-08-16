@@ -2,14 +2,15 @@ from bs4 import BeautifulSoup
 from couchpotato.core.helpers.encoding import simplifyString, tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.torrent.base import TorrentMagnetProvider
+from couchpotato.core.media._base.providers.torrent.base import TorrentMagnetProvider
+from couchpotato.core.media.movie.providers.base import MovieProvider
 import datetime
 import traceback
 
 log = CPLog(__name__)
 
 
-class CorsaroNero(TorrentMagnetProvider):
+class CorsaroNero(TorrentMagnetProvider, MovieProvider):
 
 	urls = {
 		'test': 'http://ilcorsaronero.info',
@@ -29,38 +30,38 @@ class CorsaroNero(TorrentMagnetProvider):
 
 	### TODO: what about movie year and quality? ###
 	def _searchOnTitle(self, title, movie, quality, results):
-		log.debug("Searching for %s (imdb: %s) (%s) on %s" % (title, movie['library']['identifier'].replace('tt', ''), quality['label'], self.urls['base_url']))
+		log.debug("Searching for %s (%s) on %s" % (title, quality['label'], self.urls['base_url']))
 
 		# Get italian title
 		# First, check cache
-		cache_key = 'italiantitle.%s' % movie['library']['identifier']
-		italiantitle = self.getCache(cache_key)
+		#cache_key = 'italiantitle.%s' % movie['library']['identifier']
+		#italiantitle = self.getCache(cache_key)
 
-		if not italiantitle:
-			try:
-				dataimdb = self.getHTMLData('http://www.imdb.com/title/%s/releaseinfo' % (movie['library']['identifier']))
-				html = BeautifulSoup(dataimdb)
-				titletable = html.find("table", id='akas')
-				for row in titletable.findAll('tr'):
-					if row.findAll('td')[0].text == 'Italy' : italiantitle = row.findAll('td')[1].text
-				# if we didnt find any italian title, the movie has probably never been released in italy, but we'll try searching for the original title anyways 
-				if not italiantitle:
-					log.debug('Failed to find italian title for %s, it has probably never been released in Italy, we\'ll try searching for the original title anyways', title)
-					italiantitle = title
-			except:
-				log.error('Failed parsing iMDB for italian title, using the original one: %s', traceback.format_exc())
-				italiantitle = title
+		#if not italiantitle:
+		#	try:
+		#		dataimdb = self.getHTMLData('http://www.imdb.com/title/%s/releaseinfo' % (movie['library']['identifier']))
+		#		html = BeautifulSoup(dataimdb)
+		#		titletable = html.find("table", id='akas')
+		#		for row in titletable.findAll('tr'):
+		#			if row.findAll('td')[0].text == 'Italy' : italiantitle = row.findAll('td')[1].text
+		#		# if we didnt find any italian title, the movie has probably never been released in italy, but we'll try searching for the original title anyways 
+		#		if not italiantitle:
+		#			log.debug('Failed to find italian title for %s, it has probably never been released in Italy, we\'ll try searching for the original title anyways', title)
+		#			italiantitle = title
+		#	except:
+		#		log.error('Failed parsing iMDB for italian title, using the original one: %s', traceback.format_exc())
+		#		italiantitle = title
 
-			self.setCache(cache_key,italiantitle,timeout = 25920000)
+		#	self.setCache(cache_key,italiantitle,timeout = 25920000)
 				
-		log.debug("Title after searching for the italian one: %s" % italiantitle)
+		#log.debug("Title after searching for the italian one: %s" % italiantitle)
 
 		# remove accents 
-		simpletitle = simplifyString(italiantitle)
+		simpletitle = simplifyString(title)
 		data = self.getHTMLData(self.urls['search'] % (1, tryUrlencode(simpletitle)))
 
 		if 'Nessus torrent trovato!!!!' in data:
-			log.info("No torrents found for %s on ilCorsaroNero.info.", italiantitle)
+			log.info("No torrents found for %s on ilCorsaroNero.info.", title)
 			return
 		
 		if data:
