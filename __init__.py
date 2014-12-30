@@ -39,6 +39,13 @@ config = [{
                     'type': 'int',
                     'default': 40,
                     'description': 'Will not be (re)moved until this seed time (in hours) is met.',
+                },
+		{
+                    'name': 'ignore_year',
+                    'label': 'Ignore year',
+                    'default': 0,
+                    'type': 'bool',
+                    'description': 'Will ignore the year in the search results',
                 }
             ],
         },
