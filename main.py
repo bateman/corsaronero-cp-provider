@@ -6,6 +6,7 @@ from couchpotato.core.media._base.providers.torrent.base import TorrentMagnetPro
 from couchpotato.core.media.movie.providers.base import MovieProvider
 import datetime
 import traceback
+import re
 
 log = CPLog(__name__)
 
@@ -72,8 +73,8 @@ class CorsaroNero(TorrentMagnetProvider, MovieProvider):
 				entries_2 = html.findAll('tr', attrs={'class':'odd2'})
 			
 				try:
-					self.parseResults(results, entries_1)
-					self.parseResults(results, entries_2)
+					self.parseResults(results, entries_1, movie, title)
+					self.parseResults(results, entries_2, movie, title)
 				except:
 					log.error('Failed parsing ilCorsaroNero: %s', traceback.format_exc())
 						
@@ -99,7 +100,7 @@ class CorsaroNero(TorrentMagnetProvider, MovieProvider):
 		return magnet
 	
 	# filters the <td> elements containing the results, if any
-	def parseResults(self, results, entries):
+	def parseResults(self, results, entries, movie, title):
 		table_order = ['Cat', 'Name', 'Size', 'Azione', 'Data', 'S', 'L']
 		
 		for result in entries:
@@ -121,8 +122,21 @@ class CorsaroNero(TorrentMagnetProvider, MovieProvider):
 							break										
 					elif column_name is 'Name':
 						link = td.find('a', {'class': 'tab'})
-						# extract the title from the real link instead of the text because the text is often cut and doesn't contain the full release name
-						new['name'] = link['href'].split('/')[5]									
+						#rel_name = link.text
+						#if rel_name[-2:] == "..":
+						# extract the title from the real link instead of the text because in this case the text is cut and doesn't contain the full release name and tags
+						rel_name = re.sub('_+','_',link['href'].split('/')[5])
+						if self.conf('ignore_year'):
+							# ignore missing year option is set and there's no year in the release name
+							words = re.split('\W+|_', title.lower())
+							index = rel_name.lower().find(words[-1] if words[-1] != 'the' else words[-2]) + len(words[-1] if words[-1] != 'the' else words[-2]) +1
+							index2 = index + 7
+							if not str(movie['info']['year']) in rel_name[index:index2]:
+							# couldnt find the year in the right place and ignore_year is set so remove other wrongly placed years
+								rel_name = re.sub(str(movie['info']['year']),'',rel_name)
+								rel_name = rel_name[0:index] + str(movie['info']['year']) + '_' + rel_name[index:]
+								log.debug('Ignore year is set and we couldnt find the year in the release name, release name modified into: %s', rel_name)
+						new['name'] = rel_name
 					elif column_name is 'Size':
 						new['size'] = self.parseSize(td.text)
 					elif column_name is 'Azione':
@@ -134,9 +148,15 @@ class CorsaroNero(TorrentMagnetProvider, MovieProvider):
 					elif column_name is 'Data':
 						new['age'] = self.ageToDays(td.find('font').text)
 					elif column_name is 'S':
-						new['seeders'] = tryInt(td.find('font').text)
+						seed = td.find('font').text
+						if seed == "n/a":
+							seed = "1"
+						new['seeders'] = tryInt(seed)
 					elif column_name is 'L':
-						new['leechers'] = tryInt(td.find('font').text)
+						leech = td.find('font').text
+						if leech == "n/a":
+							leech = "1"
+						new['leechers'] = tryInt(leech)
 						### TODO: what about score extras here ??? ###
 						new['score'] = 0
 	
