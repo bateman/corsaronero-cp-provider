@@ -124,11 +124,8 @@ class CorsaroNero(TorrentMagnetProvider, MovieProvider):
 						link = td.find('a', {'class': 'tab'})
 						#rel_name = link.text
 						#if rel_name[-2:] == "..":
-						# extract the title from the real link instead of the text because in this case the text is cut and doesn't contain the full release name and tags
-						# Remove double "_" signs
+						# extract the title from the real link instead of the text because in this case the text is cut and doesn't contain the full release name and tags and remove double "_" signs
 						rel_name = re.sub('_+','_',link['href'].split('/')[5])
-						# Replace "_" with "." couchpotato already does that but for quality tags it's needed
-						rel_name = re.sub('_','.',rel_name)
 						if self.conf('ignore_year'):
 							# ignore missing year option is set and there's no year in the release name
 							words = re.split('\W+|_', title.lower())
@@ -139,7 +136,8 @@ class CorsaroNero(TorrentMagnetProvider, MovieProvider):
 								rel_name = re.sub(str(movie['info']['year']),'',rel_name)
 								rel_name = rel_name[0:index] + str(movie['info']['year']) + '_' + rel_name[index:]
 								log.debug('Ignore year is set and we couldnt find the year in the release name, release name modified into: %s', rel_name)
-						new['name'] = rel_name
+						# Replace "_" with "." couchpotato already does that but for quality tags it's needed
+						new['name'] = re.sub('_','.',rel_name)
 					elif column_name is 'Size':
 						new['size'] = self.parseSize(td.text)
 					elif column_name is 'Azione':
