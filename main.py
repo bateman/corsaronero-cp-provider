@@ -115,17 +115,20 @@ class CorsaroNero(TorrentMagnetProvider, MovieProvider):
 						cat = td.find('a', {'class': 'red'}).text
 						# category must be in cat_ids to go on, otherwise break inner cicle and move to next result
 						if cat == self.cat_ids[0][1]:  # or cat == self.cat_ids[1][1]:
-							log.info("Hit right category: %s is a movie, keep going.", (cat))
+							log.debug("Hit right category: %s is a movie, keep going.", (cat))
 							td.next
 						else:
-							log.info("Wrong category: %s not a movie, skipping.", (cat))
+							log.debug("Wrong category: %s not a movie, skipping.", (cat))
 							break										
 					elif column_name is 'Name':
 						link = td.find('a', {'class': 'tab'})
 						#rel_name = link.text
 						#if rel_name[-2:] == "..":
 						# extract the title from the real link instead of the text because in this case the text is cut and doesn't contain the full release name and tags
+						# Remove double "_" signs
 						rel_name = re.sub('_+','_',link['href'].split('/')[5])
+						# Replace "_" with "." couchpotato already does that but for quality tags it's needed
+						rel_name = re.sub('_','.',rel_name)
 						if self.conf('ignore_year'):
 							# ignore missing year option is set and there's no year in the release name
 							words = re.split('\W+|_', title.lower())
