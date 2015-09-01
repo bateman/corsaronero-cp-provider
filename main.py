@@ -20,46 +20,24 @@ class CorsaroNero(TorrentMagnetProvider, MovieProvider):
 		'search': 'http://ilcorsaronero.info/torrent-ita/%d/%s.html',
 	}
 
-	### TODO: are animated movies released to DVDrip or Anime category? ###
 	cat_ids = [
-		(1, 'DVDrip'),
-		# (5, 'Anime'),
+		(1, ['dvdrip', '3d', '720p', '1080p', 'bd50', 'brrip']),
+		(19, ['scr', 'r5', 'cam', 'ts', 'tc']),
+		(20, ['dvdr'])
 	]
 
 	http_time_between_calls = 1  # seconds
-	cat_backup_id = None
+	cat_backup_id = 1
 
-	### TODO: what about movie year and quality? ###
 	def _searchOnTitle(self, title, movie, quality, results):
 		log.debug("Searching for %s (%s) on %s" % (title, quality['label'], self.urls['base_url']))
 
-		# Get italian title
-		# First, check cache
-		#cache_key = 'italiantitle.%s' % movie['library']['identifier']
-		#italiantitle = self.getCache(cache_key)
-
-		#if not italiantitle:
-		#	try:
-		#		dataimdb = self.getHTMLData('http://www.imdb.com/title/%s/releaseinfo' % (movie['library']['identifier']))
-		#		html = BeautifulSoup(dataimdb)
-		#		titletable = html.find("table", id='akas')
-		#		for row in titletable.findAll('tr'):
-		#			if row.findAll('td')[0].text == 'Italy' : italiantitle = row.findAll('td')[1].text
-		#		# if we didnt find any italian title, the movie has probably never been released in italy, but we'll try searching for the original title anyways 
-		#		if not italiantitle:
-		#			log.debug('Failed to find italian title for %s, it has probably never been released in Italy, we\'ll try searching for the original title anyways', title)
-		#			italiantitle = title
-		#	except:
-		#		log.error('Failed parsing iMDB for italian title, using the original one: %s', traceback.format_exc())
-		#		italiantitle = title
-
-		#	self.setCache(cache_key,italiantitle,timeout = 25920000)
-				
-		#log.debug("Title after searching for the italian one: %s" % italiantitle)
-
 		# remove accents 
 		simpletitle = simplifyString(title)
-		data = self.getHTMLData(self.urls['search'] % (1, tryUrlencode(simpletitle)))
+		cat = self.getCatId(quality)
+
+		log.debug("Searching in CorSaRoNero category: %s" % cat)
+		data = self.getHTMLData(self.urls['search'] % (cat, tryUrlencode(simpletitle)))
 
 		if 'Nessus torrent trovato!!!!' in data:
 			log.info("No torrents found for %s on ilCorsaroNero.info.", title)
@@ -68,7 +46,6 @@ class CorsaroNero(TorrentMagnetProvider, MovieProvider):
 		if data:
 			try:
 				html = BeautifulSoup(data)
-				#resultdiv = html.find('div', attrs={'id': 'left'})
 				entries_1 = html.findAll('tr', attrs={'class':'odd'})
 				entries_2 = html.findAll('tr', attrs={'class':'odd2'})
 			
@@ -111,19 +88,8 @@ class CorsaroNero(TorrentMagnetProvider, MovieProvider):
 				column_name = table_order[nr]
 				if column_name:
 	
-					if column_name is 'Cat':
-						cat = td.find('a', {'class': 'red'}).text
-						# category must be in cat_ids to go on, otherwise break inner cicle and move to next result
-						if cat == self.cat_ids[0][1]:  # or cat == self.cat_ids[1][1]:
-							log.debug("Hit right category: %s is a movie, keep going.", (cat))
-							td.next
-						else:
-							log.debug("Wrong category: %s not a movie, skipping.", (cat))
-							break										
-					elif column_name is 'Name':
+					if column_name is 'Name':
 						link = td.find('a', {'class': 'tab'})
-						#rel_name = link.text
-						#if rel_name[-2:] == "..":
 						# extract the title from the real link instead of the text because in this case the text is cut and doesn't contain the full release name and tags and remove double "_" signs
 						rel_name = re.sub('_+','_',link['href'].split('/')[5])
 						if self.conf('ignore_year'):
