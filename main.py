@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 from couchpotato.core.helpers.encoding import simplifyString, tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.media._base.providers.torrent.base import TorrentMagnetProvider
+from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
 from couchpotato.core.media.movie.providers.base import MovieProvider
 import datetime
 import traceback
@@ -11,7 +11,7 @@ import re
 log = CPLog(__name__)
 
 
-class CorsaroNero(TorrentMagnetProvider, MovieProvider):
+class CorsaroNero(TorrentProvider, MovieProvider):
 
 	urls = {
 		'test': 'http://ilcorsaronero.info',
@@ -21,7 +21,7 @@ class CorsaroNero(TorrentMagnetProvider, MovieProvider):
 	}
 
 	cat_ids = [
-		(1, ['dvdrip', '3d', '720p', '1080p', 'bd50', 'brrip']),
+		(1, ['dvdrip', '3d', '720p', '1080p', 'bd50', 'brrip', '2160p']),
 		(19, ['scr', 'r5', 'cam', 'ts', 'tc']),
 		(20, ['dvdr'])
 	]
@@ -69,13 +69,6 @@ class CorsaroNero(TorrentMagnetProvider, MovieProvider):
 		# to int
 		return tdelta.days
 
-	# retrieves the magnet link from the detail page of the original torrent result
-	def getMagnetLink(self, url):
-		data = self.getHTMLData(url)
-		html = BeautifulSoup(data)
-		magnet = html.find('a', attrs={'class': 'forbtn'})['href']
-		return magnet
-	
 	# filters the <td> elements containing the results, if any
 	def parseResults(self, results, entries, movie, title):
 		table_order = ['Cat', 'Name', 'Size', 'Azione', 'Data', 'S', 'L']
@@ -107,11 +100,11 @@ class CorsaroNero(TorrentMagnetProvider, MovieProvider):
 					elif column_name is 'Size':
 						new['size'] = self.parseSize(td.text)
 					elif column_name is 'Azione':
-						# retrieve download link
+						#retrieve download link
 						new['detail_url'] = td.find('form')['action']
 						new['id'] = new['detail_url'].split('/')[4]
-						# fare richiesta detail url e prendere link magnet
-						new['url'] = self.getMagnetLink(new['detail_url'])
+						hash = td.find('input', attrs={'class': 'downarrow'})['value']
+						new['url'] = 'http://itorrents.org/torrent/%s.torrent' % hash
 					elif column_name is 'Data':
 						new['age'] = self.ageToDays(td.find('font').text)
 					elif column_name is 'S':
