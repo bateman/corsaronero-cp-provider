@@ -29,13 +29,13 @@ unzip corsaronero-cp-provider-1.0.zip -d corsaronero # note, your zip file might
 cd ~/CouchPotatoServer # or wherever you have it stored
 python CouchPotato.py
 
-# Now you should see *CorsaNero* as one of the prodivers for Torrents. Note that this 
+# Now you should see *CorsaroNero* as one of the prodivers for Torrents. Note that this 
 # providers works only if you put *ita, italian, sub ita* etc. as preferred keywords
 # in "Setting" -> "Searcher" -> "Preferred Words". This will give Italian releases
 # a higher score.
 ```
 
-####SHOUT OUT
+#### SHOUT OUT
 
 Thanks to RuudBurger (https://github.com/RuudBurger) for developing CouchPotato, 
 and to trymbill (https://github.com/trymbill), for its extra torrent provider, from which I borrowed.
