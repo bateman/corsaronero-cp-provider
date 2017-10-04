@@ -3,13 +3,13 @@ corsaronero-cp-provider
 
 A CouchPotatoServer (v2) module to add ilCorsaronero.info as a torrent provider for Italian torrents.
 
-####SETUP INSTRUCTIONS (TLDR)
+#### SETUP INSTRUCTIONS (TLDR)
 
 Download the latest release zip file *https://github.com/bateman/corsaronero-cp-provider/releases/latest* and copy the init.py and main.py file
 inside "corsaronero" folder into your CouchPotato custom plugin folder (it's under CouchPotato data dir folder).
 If you don't know where your CouchPotato data dir folder is, open CouchPotato web interface, then go to: Settings -> About -> Directories
 
-####SETUP INSTRUCTIONS
+#### SETUP INSTRUCTIONS
 
 ```
 # Download the ilCorsaroNero.info search provider (Italian torrents only, see http://ilcorsaronero.info)
