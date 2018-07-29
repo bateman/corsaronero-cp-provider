@@ -4,7 +4,7 @@ from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
 from couchpotato.core.media.movie.providers.base import MovieProvider
-import datetime
+import datetime, time
 import traceback
 import re
 
@@ -69,6 +69,22 @@ class CorsaroNero(TorrentProvider, MovieProvider):
 		# to int
 		return tdelta.days
 
+	def getTorrentLink(self, hash):
+		torrent_cache_url = 'http://thetorrent.org/%s.torrent'
+		initial_link = torrent_cache_url % hash
+		data = self.getHTMLData(initial_link)
+		html = BeautifulSoup(data)
+		try:
+			new_link = html.find('a', attrs={'class': 'btn'})['href']
+		except TypeError:
+			return initial_link
+		data2 = self.getHTMLData(new_link)
+		html2 = BeautifulSoup(data2)
+		torrent_link = html2.find('a', attrs={'class': 'btn'})['href']
+		# need to sleep a second before sending the link
+		time.sleep(1)
+		return torrent_link
+
 	# filters the <td> elements containing the results, if any
 	def parseResults(self, results, entries, movie, title):
 		table_order = ['Cat', 'Name', 'Size', 'Azione', 'Data', 'S', 'L']
@@ -104,7 +120,7 @@ class CorsaroNero(TorrentProvider, MovieProvider):
 						new['detail_url'] = td.find('form')['action']
 						new['id'] = new['detail_url'].split('/')[4]
 						hash = td.find('input', attrs={'class': 'downarrow'})['value']
-						new['url'] = 'http://itorrents.org/torrent/%s.torrent' % hash
+						new['url'] = self.getTorrentLink(hash)
 					elif column_name is 'Data':
 						new['age'] = self.ageToDays(td.find('font').text)
 					elif column_name is 'S':
